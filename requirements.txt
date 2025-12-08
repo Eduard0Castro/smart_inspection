@@ -1,0 +1,9 @@
+ollama==0.6.0
+cflib==0.1.29
+
+gpiozero==2.0.1
+lgpio==0.2.2.0
+
+adafruit-blinka==8.67.0
+adafruit-circuitpython-dht==4.0.10
+adafruit-circuitpython-bmp280==3.3.9
