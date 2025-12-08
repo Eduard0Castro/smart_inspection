@@ -67,7 +67,7 @@ class SmartInspection():
         self.locker = threading.Lock()
         self.stop_mult_thread = False
         self.mult_rng_data = list()
-        self.final_inpection_result = False
+        self.final_inspection_result = False
 
         self.messages = [
                 {
@@ -174,6 +174,7 @@ class SmartInspection():
                         self.logger.error(f"Drone inspection error: {ex}")
                     finally: 
                         self.crazyflie.disconnect()
+                        self.__final_inspection_response()
                         continue
                     
             # Parse response
@@ -200,7 +201,10 @@ class SmartInspection():
                     try: self.__crazyflie_inspection()
                     except Exception as ex: 
                        self.logger.error(f"Drone inspection gets an error: {ex}")
-                    finally: self.crazyflie.disconnect()
+                    finally: 
+                        self.crazyflie.disconnect()
+                        self.__final_inspection_response()
+
 
             
             # Keep only system message + recent conversation (8 user/assistant messages)
@@ -210,15 +214,32 @@ class SmartInspection():
 
     def __crazyflie_inspection(self) -> None:
 
+        """
+
+        Function to do drone inspection and init sensor capturing data threading.
+
+        The drone operation is:
+            Take off -> Yaw counter-clockwise -> Yaw clockwise -> Land
+
+
+        """
 
         self.mult_rng_thread = threading.Thread(target = self.__multiranger_get_data)
 
         self.logger.info("Connecting with drone")
         self.crazyflie.connect()
         
-        #Fazer tratamento de exceção para esse tipo de coisa
-        self.multiranger = MultirangerSensor(sync_crazyflie = self.crazyflie.sync_crazyflie)
-        self.multiranger.initial_config()
+        try:
+            self.multiranger = MultirangerSensor(sync_crazyflie = self.crazyflie.sync_crazyflie)
+            self.multiranger.initial_config()
+        
+        except Exception as ex:
+
+            self.logger.error(f"Error while setting up Multiranger Sensor: {ex}")
+            with self.locker: self.stop_mult_thread = True
+            self.mult_rng_thread.join()
+
+            return
 
         mc = self.crazyflie.motion_commander
 
@@ -229,7 +250,7 @@ class SmartInspection():
         self.mult_rng_thread.start()
 
         self.logger.info("Starting capture data from multiranger deck")
-        self.logger.info("Rotating 360° counterclockwise!")
+        self.logger.info("Rotating 360° counter-clockwise!")
         mc.turn_left(360)
 
         sleep(1.0)
@@ -251,14 +272,23 @@ class SmartInspection():
 
 
     def __multiranger_get_data(self) -> None:
-        
 
+        """
+
+        Function to get data from Mulitanger deck distance sensors.
+        As long as the 'stop_mult_thread' attribute is not set, the data is
+        registered in the 'mult_rng_data' list
+
+        """
+        
         while not self.stop_mult_thread:
             front, back, right, left, up = self.multiranger.get_data()
-            ranges = (front, back, right, left, up)
+            sample = [front, back, right, left, up]
 
-            if not any(value is None for value in ranges):
-                self.mult_rng_data.append(ranges)
+            if not any(value is None for value in sample):
+                status = "Nothing detected" if not any(distance <= 0.3 for distance in sample) else "Anomaly Detected"
+                sample.append(status)
+                self.mult_rng_data.append(sample)
 
             sleep(0.3)
         
@@ -268,8 +298,16 @@ class SmartInspection():
 
     def write_csv_file(self) -> None:
 
+        """
+
+        Write data from multiranger deck to a CSV file called
+        'inspection_data.csv'
+
+        """
+
         path = Path(__file__).parent/"inspection_data.csv"
-        header = ["Front", "Back", "Right", "Left", "Up"]
+        header = ["Front", "Back", "Right", "Left", "Up", "Status"]
+        count_anomaly = 0
 
         if len(self.mult_rng_data) > 5:
 
@@ -279,8 +317,32 @@ class SmartInspection():
                 writer.writerow(header)
                 for i in self.mult_rng_data:
                     writer.writerow(i)
+                    if not self.final_inspection_result and i[5] == "Anomaly Detected":
+                        count_anomaly += 1
                     
+                    if count_anomaly >= 4: self.final_inspection_result = True
 
+
+    def __final_inspection_response(self) -> None:
+
+        
+        """
+        
+        Final inspection response: red LED on for five seconds to Anomaly Detected/
+        green LED for five on to Nothing Detected.
+
+        Note: It could be anything depending on the application
+
+        
+        """
+
+
+        self.basic_actuators.control_leds(red    = self.final_inspection_result, 
+                                          yellow = False, 
+                                          green  = not self.final_inspection_result)
+        sleep(5.0)
+        self.basic_actuators.control_leds()
+        self.final_inspection_result = False
 
 
 def main() -> None:

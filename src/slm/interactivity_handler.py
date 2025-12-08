@@ -159,6 +159,18 @@ class InteractivityHandler():
     @staticmethod
     def display_status(motion_data: bool, 
                        leds_status: Tuple[bool, bool, bool]) -> None:
+        
+
+        """
+        
+        Display status from Motion sensor and LEDs
+        
+        :param motion_data (bool): the boolean data from motion sensor. 
+         (True for detected, False for otherwise)
+        :param leds_status(Tuple[bool, bool, bool,]): LEDs status (True for on, False for off)
+         Order: red, yellow, green.
+        
+        """
 
 
         led_red_sts, led_ylw_sts, led_grn_sts = leds_status
