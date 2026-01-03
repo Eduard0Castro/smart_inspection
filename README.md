@@ -1,10 +1,21 @@
 # Smart Inspection
 
-Smart Inspection is an embedded edge‑AI project that performs indoor inspection using a Raspberry Pi 5, physical sensors and a Crazyflie 2.1 nano‑drone.  
+Smart Inspection is an embedded edge‑AI project that performs indoor inspection using a Raspberry Pi 5, physical sensors and a Crazyflie 2.1 nano‑drone developed by Bitcraze.  
 The system combines real‑time sensing, natural‑language interaction through a Small Language Model (SLM), and intelligent drone‑based scanning to detect and characterise potential anomalies in the environment.
 
 The inspection pipeline starts with motion detection, may involve user interaction through the SLM, and, when requested, triggers a drone‑based scan using distance readings from the Multi‑ranger Deck.  
 The codebase is written in Python, follows an object‑oriented design and was structured to be easy to extend with new sensors, actuators and behaviours.
+
+<div align="center">
+
+<a href="https://www.python.org" target="_blank" rel="noreferrer"> <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" alt="python" width="40" height="40"/> </a>![Raspberry Pi](https://img.shields.io/badge/Raspberry%20Pi-5-C51A4A?style=for-the-badge&logo=raspberry-pi&logoColor=white) ![Linux](https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black) ![Ollama](https://img.shields.io/badge/Ollama-%23000000.svg?style=for-the-badge&logo=ollama&logoColor=white) ![Llama](https://img.shields.io/badge/Meta-Llama%203.2-0467DF.svg?style=for-the-badge&logo=Meta&logoColor=white)
+
+![License](https://img.shields.io/github/license/Eduard0Castro/smart_inspection?style=for-the-badge)
+
+
+
+
+</div>
 
 ---
 
@@ -13,9 +24,9 @@ The codebase is written in Python, follows an object‑oriented design and was s
 At a high level, the system is composed of four main layers:
 
 1. **Sensors** – read motion and environmental data from the physical world.  
-2. **Actuators** – provide feedback (LEDs) and control the Crazyflie drone.  
+2. **Actuators** – provide feedback (LEDs) and controls for the Crazyflie drone.  
 3. **SLM Layer** – runs a local language model and handles natural‑language interaction and function‑calling.  
-4. **Orchestration** – coordinates sensors, actuators and SLM to implement the inspection logic.
+4. **Orchestration** – coordinates sensors, actuators and SLM to implement the inspection logic based on the .
 
 Each of these layers is implemented in a dedicated module and organised in classes, described below.
 
@@ -32,10 +43,10 @@ Typical responsibilities include:
 
 - storing configuration parameters (GPIO pin, I²C address, etc.)  
 - handling low‑level setup and initialisation  
-- exposing a `read()`‑style method (or equivalent) that returns the current measurement in a consistent format  
-- providing simple error handling so that the rest of the system can work with safe, predictable data
+- exposing a `get_data()`‑style method that returns the current measurement in a consistent format  
+- providing error handling so that the rest of the system can work with safe, predictable data
 
-All other sensor classes inherit from this base class.
+All other sensor classes inherit from this base class and not all sensors are used in the specific theme of this project, but they were implemented for other possible applications within the context.
 
 ### 2.2 `PIRMotionDetector`
 
@@ -49,7 +60,7 @@ Its main role is:
 ### 2.3 `BMP280`
 
 The `BMP280` class encapsulates a Bosch BMP280 temperature and pressure sensor.  
-It is used to:
+Common applications:
 
 - read ambient temperature  
 - read atmospheric pressure  
@@ -154,12 +165,11 @@ Typical responsibilities:
 - initialising the SLM configuration and the `InteractivityHandler`  
 - implementing the main application loop, which can be summarised as:
 
-  1. **Monitoring phase** – constantly read the motion sensor (and possibly other sensors).  
-  2. **Trigger detection** – when motion is detected, decide whether to involve the SLM or directly trigger an inspection, depending on the design.  
-  3. **User interaction (optional)** – forward a description of the situation to the SLM and allow the user to ask questions or explicitly request a drone inspection.  
-  4. **Drone inspection** – if an inspection is requested (either automatically or by the user), call the appropriate method on `CrazyflieActuator` to execute the inspection routine and collect Multi‑ranger data.  
-  5. **Evaluation and feedback** – analyse the distance data and other sensor readings, infer whether there is an anomaly and update the LEDs accordingly (green or red).  
-  6. **Reporting** – when needed, send a concise, natural‑language summary back to the user through the SLM.
+  1. **User interaction** – allow the user to ask questions or explicitly request a drone inspection. User controls everything in the application through natural language. 
+  2. **Monitoring phase** –  if requested for the user, read the motion sensor (and possibly other sensors).  
+  3. **Trigger** – when motion is detected, asks the user if he wnats to trigger an inspection.  
+  4. **Drone inspection** – if an inspection is requested (either automatically or by the user), call the appropriate method to execute the inspection routine and collect Multi‑ranger data.  
+  5. **Evaluation and feedback** – analyse the distance data and other sensor readings, infer whether there is an anomaly and update the LEDs accordingly (green or red). 
 
 By concentrating orchestration logic in a single class, the project remains easier to understand, debug and extend.
 
@@ -172,26 +182,76 @@ The following diagram summarises the logical flow of data and decisions in the s
 ```mermaid
 flowchart TD
 
-B[SmartInspection]
+B[Initial settings]
 
-B -->|build prompt| C[SLM ]
+B --> C[SLM ]
 
 C --> D{Drone tool/Motion detected?}
-D -->|no| F[LED update + reply]
-D -->|yes| E[Crazyflie control]
+D -->|no| C
+D -->|yes| E[Crazyflie setup]
 
 E -->|scan room| G[Multi-ranger data]
 G -->|evaluate| H[Anomaly check]
-H -->|set state| I[LEDs green/red]
+H -->|no|I[Turn on Green LED]
+H -->|yes|J[Turn on Red LED]
 I --> C
+J --> C
 
 ```
 
 ---
 
-## 7. Installation and Execution
+## 7. Physical Setup
 
-### 7.1 Requirements
+The following image register the pyshical setup used in this project. It can be seen in it the Raspberry PI 5 connections, the sensors, the crazyradio used in the drone communication and the Crazyflie drone.
+Furthermore, the Raspberry PI 5 is equipped with a heat sink, a case and a fan. This is because applications with SLMs use a lot of the device's processing power, activating the 4 cores of the Rasberry PI completely at the moment the model thinks, which can cause overheating.
+
+<img src="img/physical_setup.jpg"/>
+
+</br>
+</br>
+
+The pinout connections can be checked in the following tables: 
+<table>
+<tr>
+<td valign="top">
+<table>
+<thead>
+<tr><th colspan="2">Motion Sensor HC-SR501</th></tr>
+<tr><th>Sensor PIN</th><th>Raspberry PIN</th></tr>
+</thead>
+<tbody>
+<tr><td>5V</td><td>PIN 2 (5V)</td></tr>
+<tr><td>GND</td><td>PIN 6 (Ground)</td></tr>
+<tr><td>TTL output</td><td>PIN 7 (GPCLK0)</td></tr>
+</tbody>
+</table>
+</td>
+
+<td width="24"></td>
+
+<td valign="top">
+<table>
+<thead>
+<tr><th colspan="2">LEDs Actuators</th></tr>
+<tr><th>LEDs</th><th>Raspberry PIN</th></tr>
+</thead>
+<tbody>
+<tr><td>Red</td><td>PIN 33 (GPIO13)</td></tr>
+<tr><td>Green</td><td>PIN 37 (GPIO26)</td></tr>
+<tr><td>Yellow</td><td>PIN 35 (GPIO19)</td></tr>
+</tbody>
+</table>
+</td>
+</tr>
+</table>
+
+
+
+
+## 8. Installation and Execution
+
+### 8.1 Requirements
 
 - Raspberry Pi 5 (64‑bit OS recommended)  
 - Python 3.9+  
@@ -207,7 +267,7 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 7.2 Running the System
+### 8.2 Running the System
 
 From the project directory, run:
 
@@ -219,7 +279,7 @@ During execution, user queries that mention **“drone”**, **“fly”** or **
 
 ---
 
-## 8. Repository Structure
+## 9. Repository Structure
 
 ```text
 project/
@@ -241,13 +301,21 @@ project/
 
 ---
 
-## 9. Acknowledgments
+## 10. Demonstrative Video and Reports
+A demonstrative video can be watched on YouTube on Professor Marcelo Rovai's channel. First, in the video, there is an explanation of the development process and a final demonstration with the execution of the model and an example of inspection carried out by the drone.
+
+[![Assista no YouTube](img/smart_inspection_presentation.png)](https://www.youtube.com/watch?v=_fR4MlWrTJw&t=1s)
+
+Furthermore, the report submitted to the subject teacher with more information and details about the project can be checked [here](https://github.com/Eduard0Castro/smart_inspection/docs/smart_inspection_report.pdf).
+
+## 11. Acknowledgments
 
 The codebase was inspired by scripts provided by Professor Marcelo Rovai in the course **Machine Learning and System Engineering**.  
 Reference link: *https://github.com/Mjrovai/UNIFEI-IESTI05-EDGE_AI.git*
 
+
 ---
 
-## 10. Author
+## 12. Author
 
 **This project was developed by Eduardo Castro at Universidade Federal de Itajubá (UNIFEI), 2025.**
