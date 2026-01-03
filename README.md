@@ -10,10 +10,7 @@ The codebase is written in Python, follows an object‑oriented design and was s
 
 <a href="https://www.python.org" target="_blank" rel="noreferrer"> <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" alt="python" width="40" height="40"/> </a>![Raspberry Pi](https://img.shields.io/badge/Raspberry%20Pi-5-C51A4A?style=for-the-badge&logo=raspberry-pi&logoColor=white) ![Linux](https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black) ![Ollama](https://img.shields.io/badge/Ollama-%23000000.svg?style=for-the-badge&logo=ollama&logoColor=white) ![Llama](https://img.shields.io/badge/Meta-Llama%203.2-0467DF.svg?style=for-the-badge&logo=Meta&logoColor=white)
 
-![License](https://img.shields.io/github/license/Eduard0Castro/smart_inspection?style=for-the-badge)
-
-
-
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue?style=for-the-badge)](https://www.apache.org/licenses/LICENSE-2.0)
 
 </div>
 
