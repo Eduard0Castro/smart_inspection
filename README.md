@@ -209,9 +209,9 @@ Furthermore, the Raspberry PI 5 is equipped with a heat sink, a case and a fan. 
 <img src="img/physical_setup.jpg"/>
 
 </br>
-</br>
 
 The pinout connections can be checked in the following tables: 
+
 <table>
 <tr>
 <td valign="top">
@@ -245,7 +245,6 @@ The pinout connections can be checked in the following tables:
 </td>
 </tr>
 </table>
-
 
 
 
@@ -306,7 +305,7 @@ A demonstrative video can be watched on YouTube on Professor Marcelo Rovai's cha
 
 [![Assista no YouTube](img/smart_inspection_presentation.png)](https://www.youtube.com/watch?v=_fR4MlWrTJw&t=1s)
 
-Furthermore, the report submitted to the subject teacher with more information and details about the project can be checked [here](https://github.com/Eduard0Castro/smart_inspection/docs/smart_inspection_report.pdf).
+Furthermore, the report submitted to the subject teacher with more information and details about the project can be checked [here](https://github.com/Eduard0Castro/smart_inspection/blob/master/docs/smart_inspection_report.pdf).
 
 ## 11. Acknowledgments
 
